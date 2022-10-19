@@ -46,11 +46,11 @@
 #define MAX_SUBNETS 16
 
 struct if_sock {
-	const char *ifname;		/* interface name  */
-	int sockfd;				/* socket filedesc */
+	const char *ifname;	/* interface name  */
+	int sockfd;		/* socket filedesc */
 	struct in_addr addr;	/* interface addr  */
 	struct in_addr mask;	/* interface mask  */
-	struct in_addr net;		/* interface network (computed) */
+	struct in_addr net;	/* interface network (computed) */
 };
 
 struct subnet {
@@ -208,6 +208,12 @@ static int create_send_sock(int recv_sockfd, const char *ifname, struct if_sock 
 	// enable loopback in case someone else needs the data
 	if ((r = setsockopt(sd, IPPROTO_IP, IP_MULTICAST_LOOP, &on, sizeof(on))) < 0) {
 		log_message(LOG_ERR, "send setsockopt(IP_MULTICAST_LOOP): %s", strerror(errno));
+		return r;
+	}
+
+	int ttl = 255; // IP TTL should be 255: https://datatracker.ietf.org/doc/html/rfc6762#section-11
+	if ((r = setsockopt(sd, IPPROTO_IP, IP_MULTICAST_TTL, &ttl, sizeof(ttl))) < 0) {
+		log_message(LOG_ERR, "send setsockopt(IP_MULTICAST_TTL): %s", strerror(errno));
 		return r;
 	}
 
